@@ -37,12 +37,11 @@ def get_vk_session(user=True):
     return vk_session
 
 
-def message():
-    pprint(media)
+def message(media, user):
     if media['attachments'][0]['type'] == 'audio_message':
         id = media['attachments'][0]['audio_message']['id']
         access_key = media['attachments'][0]['audio_message']['access_key']
-        vk.messages.send(user_id=user, attachment=f'audio_message{user}_{id}_{access_key}',
+        vk.messages.send(user_id=user, message=media['attachments'][0]['audio_message']['link_mp3'],
                          random_id=random.randint(0, 2 ** 64))
     elif False:
         pass
@@ -59,13 +58,13 @@ if __name__ == '__main__':
     vk_session = get_vk_session(False)
     db_session.global_init("vk_love_bot.db")
     longpoll = VkBotLongPoll(vk_session, 193209431)
-    if 'Y' == input('Запуск Бота? Y/N'):
-        for event in longpoll.listen():
-            if event.type == VkBotEventType.MESSAGE_NEW:
+    for event in longpoll.listen():
+        if event.type == VkBotEventType.MESSAGE_NEW:
 
-                vk = vk_session.get_api()
-                user = vk.users.get(user_ids=event.obj.message['from_id'])[0]['id']
-                print(user)
-                media = event.obj.message
-                # СДЕСЬ ФУНКЦИЯ КОТОРАЯ ОБРАБАЫТВЕТ СООБЩЕНИЯ И ГОТОВА ИХ ОТПРАЛЯТЬ message()
+            vk = vk_session.get_api()
+            user = vk.users.get(user_ids=event.obj.message['from_id'])[0]['id']
+            media = event.obj.message
+            pprint(media)
+            message(media, user)
+            # СДЕСЬ ФУНКЦИЯ КОТОРАЯ ОБРАБАЫТВЕТ СООБЩЕНИЯ И ГОТОВА ИХ ОТПРАЛЯТЬ message()
 
