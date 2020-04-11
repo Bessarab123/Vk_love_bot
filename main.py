@@ -3,6 +3,7 @@ from pprint import pprint
 
 import vk_api
 import json
+from data import db_session
 
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
@@ -20,7 +21,7 @@ def get_vk_session(user=True):
             data = json.load(f)
             password = data["password"]
             login = data["login"]
-        vk_session = vk_api.VkApi(login, password, auth_handler=auth_handler)
+        vk_session = vk_api.VkApi(password, login, auth_handler=auth_handler)
         try:
             vk_session.auth()
         except vk_api.AuthError as error_msg:
@@ -56,13 +57,15 @@ def message():
 
 if __name__ == '__main__':
     vk_session = get_vk_session(False)
+    db_session.global_init("vk_love_bot.db")
     longpoll = VkBotLongPoll(vk_session, 193209431)
-    for event in longpoll.listen():
-        if event.type == VkBotEventType.MESSAGE_NEW:
+    if 'Y' == input('Запуск Бота? Y/N'):
+        for event in longpoll.listen():
+            if event.type == VkBotEventType.MESSAGE_NEW:
 
-            vk = vk_session.get_api()
-            user = vk.users.get(user_ids=event.obj.message['from_id'])[0]['id']
-            print(user)
-            media = event.obj.message
-            # СДЕСЬ ФУНКЦИЯ КОТОРАЯ ОБРАБАЫТВЕТ СООБЩЕНИЯ И ГОТОВА ИХ ОТПРАЛЯТЬ
-    # TODO тут что-то должно появиться
+                vk = vk_session.get_api()
+                user = vk.users.get(user_ids=event.obj.message['from_id'])[0]['id']
+                print(user)
+                media = event.obj.message
+                # СДЕСЬ ФУНКЦИЯ КОТОРАЯ ОБРАБАЫТВЕТ СООБЩЕНИЯ И ГОТОВА ИХ ОТПРАЛЯТЬ message()
+
