@@ -1,5 +1,6 @@
 import vk_api
 import json
+from data import db_session
 
 
 def get_vk_session(user=True):
@@ -15,7 +16,7 @@ def get_vk_session(user=True):
             data = json.load(f)
             password = data["password"]
             login = data["login"]
-        vk_session = vk_api.VkApi(login, password, auth_handler=auth_handler)
+        vk_session = vk_api.VkApi(password, login, auth_handler=auth_handler)
         try:
             vk_session.auth()
         except vk_api.AuthError as error_msg:
@@ -32,6 +33,7 @@ def get_vk_session(user=True):
 
 
 if __name__ == '__main__':
+    db_session.global_init("vk_love_bot.db")
     vk_session = get_vk_session(True)
     vk = vk_session.get_api()
     # TODO тут что-то должно появиться
