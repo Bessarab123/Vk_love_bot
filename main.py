@@ -4,7 +4,7 @@ from pprint import pprint
 import vk_api
 import json
 from data import db_session
-
+from update_data import *
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
 
@@ -109,7 +109,9 @@ if __name__ == '__main__':
         if event.type == VkBotEventType.MESSAGE_NEW:
             user = vk.users.get(user_ids=event.obj.message['from_id'])[0]['id']
             text = event.obj.message['text']
-            last_text = None  # TODO ЧТО-ТО из базы
+            from_id = event.obj.message['from_id']
+            last_text = get_last_message(db_session, from_id)
+            update_user_data(db_session, from_id, {"last_message": text})
             if text == '/help':
                 vk.messages.send(user_id=user,
                                  message='''Я могу познакомить вас с анонимным пользователем - /anonym_user.
@@ -120,18 +122,16 @@ if __name__ == '__main__':
                                          Чего желаете вы?''', random_id=random.randint(0, 2 ** 64))
             elif last_text == '/questionnaire':
                 # Пока особо не поняла какая должна быть анкета. Что еще добавить кроме пола и возратса?
-                vk.messages.send(user_id=event.obj.message['from_id'],
+                vk.messages.send(user_id=from_id,
                                  message=f"", random_id=random.randint(0, 2 ** 64))
                 questionnaire = event.obj.message['text']
             elif last_text == '/set_city':
-                # TODO Здесь перменная text должна записаться в таблицу
-                pass
+                update_user_data(db_session, from_id, {"city": text})
             elif last_text == '/set_age':
-                # TODO Здесь перменная text должна записаться в таблицу
-                pass
+                update_user_data(db_session, from_id, {"age": text})
             elif last_text == '/set_sex':
                 # Кстати можно брать данные по инфе из профиля пользователя
-                # TODO Здесь перменная text должна записаться в таблицу
+                update_user_data(db_session, from_id, {"sex": text})
                 pass
             elif text == '/test':
                 TEST = not TEST

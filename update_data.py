@@ -1,8 +1,14 @@
 from main import *
 from data.user import *
 
+def get_last_message(db_session, user_id):
+    session = db_session.create_session()
+    user = session.query(User).get(user_id)
+    if not user:
+        return ""
+    return user.last_message
 
-def update_data(db_session, user_id, dictionary={}):
+def update_user_data(db_session, user_id, dictionary={}):
     session = db_session.create_session()
     user = session.query(User).get(user_id)
     if not user:
