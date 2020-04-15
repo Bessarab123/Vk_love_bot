@@ -13,3 +13,4 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     description = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     scores = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     last_message = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    last_anonym_user_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)

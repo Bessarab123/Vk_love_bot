@@ -102,8 +102,8 @@ if __name__ == '__main__':
             user_id = event.obj["user_id"]
             print(f'{event.obj.user_id} вступил в группу!')
             vk.messages.send(user_id=user_id,
-                             message=f"{user_id} вступил в группу! Для того чтобы продолжить общение, "
-                                     "Хотите узнать мои функции - напишите /help",
+                             message=f'''{user_id} вступил в группу! Для того чтобы продолжить общение,
+                                        Хотите узнать мои функции - напишите /help''',
                              random_id=random.randint(0, 2 ** 64))
             # Получаем из профиля пользователя данные о нём
             data = vk.users.get(user_ids=user_id, fields='city, bdate, sex')[0]
@@ -137,11 +137,12 @@ if __name__ == '__main__':
                 vk.messages.send(user_id=user,
                                  message='''Я могу познакомить вас анонимно с пользователем.
                                          Но для этого заполните небольшую анкету - 
-                                         /set_description."
+                                         /set_description.
                                          Показать анкету случайного пользователя - 
                                          /anonym_questionnaire.
                                          Понравилась анкета от анонимного пользователя - 
-                                         /questionnaire_anonym_user, чтобы я вас соединила в чате
+                                         /questionnaire_anonym_user, чтобы я вас соединила в чате.
+                                         Захотите прекратить общение - /stop в помощь.
                                          Также вы можете просто пообщаться со мной - /communication.
                                          Чего желаете вы?''', random_id=random.randint(0, 2 ** 64))
             elif last_text == '/set_description':
@@ -159,3 +160,30 @@ if __name__ == '__main__':
                 print(TEST)
             elif TEST:
                 send_media_file(event.obj.message, user)
+            elif last_text == '/communication':
+                vk.messages.send(user_id=user,
+                                 message='''Я совсем молодой бот, поэтому далеко не на 
+                                            все смогу поговорить.''', random_id=random.randint(0, 2 ** 64))
+            elif last_text == '/anonym_questionnaire':
+                # TODO random_questionnaire =
+                # берем рандомную анкетку из БД
+                vk.message.send(user_id=user,
+                                message=random_questionnaire,
+                                random_id=random.randint(0, 2 ** 64))
+            elif last_text == '/questionnaire_anonym_user':
+                pass
+                # Тут соединяются два анонимных пользователя в анонимном чате.
+                # anonym_id - это чел с коорым только что начал юзер общаться.
+                # Я просто не поняла как это по-нормальному сделать, поэтому будет такой корявый шаблон
+                update_user_data(db_session, user_id, {'last_anonym_user_id': anonym_id})
+            elif last_text == '/stop':
+                scores_of_karma = 0
+                vk.messages.send(user_id=user,
+                                 message='''Вы соизволили прекратить общение, поставьте этому пользователю балл.
+                                 Максимум - +50, минимум - -50. Ставтьте целые числа, пожалуйста.''',
+                                 random_id=random.randint(0, 2 ** 64))
+                if last_text[0] == '+':
+                    scores_of_karma =+ int(last_text[1:])
+                else:
+                    scores_of_karma =- int(last_text[1:])
+                update_user_data(db_session, anonym_id, {'scores': + scores_of_karma})
