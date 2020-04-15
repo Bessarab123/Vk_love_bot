@@ -37,29 +37,62 @@ def get_vk_session(user=True):
     return vk_session
 
 
-def message(media, user):
+def send_media_file(media, user):
     if media['attachments'][0]['type'] == 'audio_message':
         id = media['attachments'][0]['audio_message']['id']
         access_key = media['attachments'][0]['audio_message']['access_key']
         vk.messages.send(user_id=user, message=media['attachments'][0]['audio_message']['link_mp3'],
                          random_id=random.randint(0, 2 ** 64))
-    elif False:
-        pass
-    else:
-        id = media['attachments'][0]['photo']['id']
-        access_key = media['attachments'][0]['photo']['access_key']
+    elif media['attachments'][0]['type'] == 'video':
+        id = media['attachments'][0]['video']['id']
+        attachment = f'video{user}_{id}'
+        if 'access_key' in media['attachments'][0]['video'].keys():
+            attachment += f"_{media['attachments'][0]['video']['access_key']}"
 
         vk.messages.send(user_id=user,
-                         attachment=f'photo{user}_{id}_{access_key}',
+                         attachment=attachment,
+                         random_id=random.randint(0, 2 ** 64))
+    elif media['attachments'][0]['type'] == 'photo':
+        id = media['attachments'][0]['photo']['id']
+        attachment = f'photo{user}_{id}'
+        if 'access_key' in media['attachments'][0]['photo'].keys():
+            attachment += f"_{media['attachments'][0]['photo']['access_key']}"
+
+        vk.messages.send(user_id=user,
+                         attachment=attachment,
+                         random_id=random.randint(0, 2 ** 64))
+    elif media['attachments'][0]['type'] == 'audio':
+        id = media['attachments'][0]['audio']['id']
+        attachment = f'audio{user}_{id}'
+        if 'access_key' in media['attachments'][0]['audio'].keys():
+            attachment += f"_{media['attachments'][0]['audio']['access_key']}"
+
+        vk.messages.send(user_id=user,
+                         attachment=attachment,
+                         random_id=random.randint(0, 2 ** 64))
+    elif media['attachments'][0]['type'] == 'doc':
+        # TODO ВЛОЖЕНИЕ УДАЛЕНО
+        id = media['attachments'][0]['doc']['id']
+        attachment = f'doc{user}_{id}'
+        if 'access_key' in media['attachments'][0]['doc'].keys():
+            attachment += f"_{media['attachments'][0]['doc']['access_key']}"
+
+        vk.messages.send(user_id=user,
+                         attachment=attachment,
+                         random_id=random.randint(0, 2 ** 64))
+    else:
+        pprint(media)
+        vk.messages.send(user_id=user,
+                         message='Сорри мы пока не можем обрабатывать такие файлы',
                          random_id=random.randint(0, 2 ** 64))
 
 
 if __name__ == '__main__':
+    TEST = False
     vk_session = get_vk_session(False)
     vk = vk_session.get_api()
     db_session.global_init("vk_love_bot.db")
     longpoll = VkBotLongPoll(vk_session, 193209431)
-
 
     for event in longpoll.listen():
         # Функция позволяет группе отправлять сообщения новоприбывшему
@@ -74,11 +107,9 @@ if __name__ == '__main__':
                                      "напишите /help", random_id=random.randint(0, 2 ** 64))
 
         if event.type == VkBotEventType.MESSAGE_NEW:
-            vk = vk_session.get_api()
             user = vk.users.get(user_ids=event.obj.message['from_id'])[0]['id']
             text = event.obj.message['text']
-            pprint(text)
-            last_text = None # TODO ЧТО-ТО из базы
+            last_text = None  # TODO ЧТО-ТО из базы
             if text == '/help':
                 vk.messages.send(user_id=user,
                                  message='''Я могу познакомить вас с анонимным пользователем - /anonym_user.
@@ -102,3 +133,8 @@ if __name__ == '__main__':
                 # Кстати можно брать данные по инфе из профиля пользователя
                 # TODO Здесь перменная text должна записаться в таблицу
                 pass
+            elif text == '/test':
+                TEST = not TEST
+                print(TEST)
+            elif TEST:
+                send_media_file(event.obj.message, user)
