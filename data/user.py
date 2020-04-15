@@ -6,9 +6,7 @@ from sqlalchemy_serializer import SerializerMixin
 
 class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     __tablename__ = 'users'
-    id = sqlalchemy.Column(sqlalchemy.Integer,
-                           primary_key=True, autoincrement=True)
-    age = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    age = sqlalchemy.Column(sqlalchemy.Integer, nullable=True, primary_key=True)
     sex = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     city = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     description = sqlalchemy.Column(sqlalchemy.String, nullable=True)

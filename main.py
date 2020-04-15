@@ -56,39 +56,49 @@ def message(media, user):
 
 if __name__ == '__main__':
     vk_session = get_vk_session(False)
+    vk = vk_session.get_api()
     db_session.global_init("vk_love_bot.db")
     longpoll = VkBotLongPoll(vk_session, 193209431)
+
+
     for event in longpoll.listen():
         # Функция позволяет группе отправлять сообщения новоприбывшему
         if event.type == VkBotEventType.GROUP_JOIN:
+            user = vk.users.get(user_ids=event.obj.message['from_id'])[0]['id']
             print(f'{event.obj.user_id} вступил в группу!')
             print(f'Для того чтобы продолжить общение, '
                   f'напишите /communication. Хотите узнать мои функции - напишите /help')
-            vk.messages.send(user_id=event.obj.message['from_id'],
-                             message=f"{event.obj.user_id} вступил в группу! Для того чтобы продолжить общение, "
-                                     "напишите /communication. Хотите узнать мои функции - напишите /help")
+            vk.messages.send(user_id=user,
+                             message=f"{event.obj.message['from_id']} вступил в группу! Для того чтобы продолжить общение, "
+                                     "напишите /communication. Хотите узнать мои функции - "
+                                     "напишите /help", random_id=random.randint(0, 2 ** 64))
 
         if event.type == VkBotEventType.MESSAGE_NEW:
             vk = vk_session.get_api()
             user = vk.users.get(user_ids=event.obj.message['from_id'])[0]['id']
-            media = event.obj.message['text']
-            pprint(media)
-            message(media, user)
-            if media == '/help':
-                vk.messages.send(user_id=event.obj.message['from_id'],
-                                 message=f"Я могу познакомить вас с анонимным пользователем - /anonym_user ."
-                                         f"Но для этого заполните небольшую анкету - /questionnaire ."
-                                         f"Показать анкету случайного пользователя - /anonym_questionnaire ."
-                                         f"Понравилась анкета от анонимного пользователя - /questionnaire_anonym_user, чтобы я вас соединила в чате"
-                                         f"Также вы можете просто пообщаться со мной - /communication ."
-                                         f"Чего желаете вы?")
-            if media == '/questionnaire':
+            text = event.obj.message['text']
+            pprint(text)
+            last_text = None # TODO ЧТО-ТО из базы
+            if text == '/help':
+                vk.messages.send(user_id=user,
+                                 message='''Я могу познакомить вас с анонимным пользователем - /anonym_user.
+                                         Но для этого заполните небольшую анкету - /questionnaire."
+                                         Показать анкету случайного пользователя - /anonym_questionnaire.
+                                         Понравилась анкета от анонимного пользователя - /questionnaire_anonym_user, чтобы я вас соединила в чате
+                                         Также вы можете просто пообщаться со мной - /communication.
+                                         Чего желаете вы?''', random_id=random.randint(0, 2 ** 64))
+            elif last_text == '/questionnaire':
                 # Пока особо не поняла какая должна быть анкета. Что еще добавить кроме пола и возратса?
                 vk.messages.send(user_id=event.obj.message['from_id'],
-                                 message=f"")
+                                 message=f"", random_id=random.randint(0, 2 ** 64))
                 questionnaire = event.obj.message['text']
-            if media == '/anonym_questionnaire':
-                # Какой-то рандом из базы данных, которую мы уже заранее подключили, но не создали
-                vk.messages.send(user_id=event.obj.message['from_id'],
-                                 message='Потом пропишу как он берет анкету из БД')
-            # (З)ДЕСЬ ФУНКЦИЯ КОТОРАЯ ОБРАБАЫТВЕТ СООБЩЕНИЯ И ГОТОВА ИХ ОТПРАЛЯТЬ message()
+            elif last_text == '/set_city':
+                # TODO Здесь перменная text должна записаться в таблицу
+                pass
+            elif last_text == '/set_age':
+                # TODO Здесь перменная text должна записаться в таблицу
+                pass
+            elif last_text == '/set_sex':
+                # Кстати можно брать данные по инфе из профиля пользователя
+                # TODO Здесь перменная text должна записаться в таблицу
+                pass
