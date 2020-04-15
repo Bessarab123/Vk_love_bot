@@ -92,5 +92,3 @@ if __name__ == '__main__':
                 vk.messages.send(user_id=event.obj.message['from_id'],
                                  message='Потом пропишу как он берет анкету из БД')
             # (З)ДЕСЬ ФУНКЦИЯ КОТОРАЯ ОБРАБАЫТВЕТ СООБЩЕНИЯ И ГОТОВА ИХ ОТПРАЛЯТЬ message()
-
-
