@@ -132,7 +132,6 @@ if __name__ == '__main__':
             text = event.obj.message['text']
             user_id = event.obj.message['from_id']
             last_text = get_last_message(db_session, user_id)
-            update_user_data(db_session, user_id, {"last_message": text})
             if text == '/help':
                 vk.messages.send(user_id=user,
                                  message='''Я могу познакомить вас анонимно с пользователем.
