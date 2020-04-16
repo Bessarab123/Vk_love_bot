@@ -154,7 +154,6 @@ if __name__ == '__main__':
             elif last_text == '/set_sex':
                 # Кстати можно брать данные по инфе из профиля пользователя
                 update_user_data(db_session, user_id, {"sex": text})
-                pass
             elif text == '/test':
                 TEST = not TEST
                 print(TEST)
@@ -176,14 +175,19 @@ if __name__ == '__main__':
                 # anonym_id - это чел с коорым только что начал юзер общаться.
                 # Я просто не поняла как это по-нормальному сделать, поэтому будет такой корявый шаблон
                 update_user_data(db_session, user_id, {'last_anonym_user_id': anonym_id})
-            elif last_text == '/stop':
-                scores_of_karma = 0
+            elif text == '/stop':
                 vk.messages.send(user_id=user,
                                  message='''Вы соизволили прекратить общение, поставьте этому пользователю балл.
                                  Максимум - +50, минимум - -50. Ставтьте целые числа, пожалуйста.''',
                                  random_id=random.randint(0, 2 ** 64))
-                if last_text[0] == '+':
-                    scores_of_karma =+ int(last_text[1:])
+            elif last_text == '/stop':
+                if text.isdight():
+                    scores_of_karma = int(text)
                 else:
-                    scores_of_karma =- int(last_text[1:])
-                update_user_data(db_session, anonym_id, {'scores': + scores_of_karma})
+                    vk.messages.send(user_id=user, message="Вы ввели не число \nЕсли не хотите "
+                                                           "менять рэйтин то введите - 0")
+                    continue
+                update_user_data(db_session, anonym_id, {'scores': scores_of_karma})
+
+            #После всех возможных вариантов сообщений меняем last_text на text
+            update_user_data(db_session, user, {'last_text': text})

@@ -20,7 +20,11 @@ def update_user_data(db_session, user_id, dictionary={}):
         user.scores = 500
         session.add(user)
     for key in dictionary.keys():
-        if key == "city":
+        if key == "last_text":
+            user.last_message = dictionary[key]
+        elif key == "scores":
+            user.scores += dictionary[key]
+        elif key == "city":
             user.city = dictionary[key]
         elif key == "age":
             user.age = dictionary[key]
