@@ -177,7 +177,8 @@ if __name__ == '__main__':
                 update_user_data(db_session, user_id, {'last_anonym_user_id': anonym_id})
             elif text == '/stop':
                 vk.messages.send(user_id=user,
-                                 message='''Вы соизволили прекратить общение, поставьте этому пользователю балл.
+                                 message='''Вы соизволили прекратить общение, поставьте этому 
+                                 пользователю балл.
                                  Максимум - +50, минимум - -50. Ставтьте целые числа, пожалуйста.''',
                                  random_id=random.randint(0, 2 ** 64))
             elif last_text == '/stop':
