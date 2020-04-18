@@ -1,4 +1,3 @@
-from main import *
 from data.user import *
 
 
