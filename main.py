@@ -42,55 +42,67 @@ def get_vk_session(user=True):
 def send_text_or_file(text, user_id):
     """Обработка сообщений и последующая их отправка указонаму юзеру
     media - словарь с информацие о пришедшем сообщении
-    user - id пользователя vk от кого надо отправить сообщение"""
+    user_id - id пользователя vk от кого надо отправить сообщение"""
+
     user = get_interlocutor(db_session, user_id)
-    if text['attachments'][0]['type'] == 'audio_message':
-        id = text['attachments'][0]['audio_message']['id']
-        access_key = text['attachments'][0]['audio_message']['access_key']
-        vk.messages.send(user_id=user, message=text['attachments'][0]['audio_message']['link_mp3'],
-                         random_id=random.randint(0, 2 ** 64))
+    if text['attachments'] != []:
+        if text['attachments'][0]['type'] == 'audio_message':
+            id = text['attachments'][0]['audio_message']['id']
+            access_key = text['attachments'][0]['audio_message']['access_key']
+            vk.messages.send(user_id=user,
+                             message=text['attachments'][0]['audio_message']['link_mp3'],
+                             random_id=random.randint(0, 2 ** 64))
 
-    elif text['attachments'][0]['type'] == 'video':
-        id = text['attachments'][0]['video']['id']
-        attachment = f'video{user}_{id}'
-        if 'access_key' in text['attachments'][0]['video'].keys():
-            attachment += f"_{text['attachments'][0]['video']['access_key']}"
-        vk.messages.send(user_id=user,
-                         attachment=attachment,
-                         random_id=random.randint(0, 2 ** 64))
+        elif text['attachments'][0]['type'] == 'video':
+            id = text['attachments'][0]['video']['id']
+            owner_id = text['attachments'][0]['video']['owner_id']
+            attachment = f'video{owner_id}_{id}'
+            if 'access_key' in text['attachments'][0]['video'].keys():
+                attachment += f"_{text['attachments'][0]['video']['access_key']}"
+            vk.messages.send(user_id=user,
+                             attachment=attachment,
+                             random_id=random.randint(0, 2 ** 64))
 
-    elif text['attachments'][0]['type'] == 'photo':
-        id = text['attachments'][0]['photo']['id']
-        attachment = f'photo{user}_{id}'
-        if 'access_key' in text['attachments'][0]['photo'].keys():
-            attachment += f"_{text['attachments'][0]['photo']['access_key']}"
-        vk.messages.send(user_id=user,
-                         attachment=attachment,
-                         random_id=random.randint(0, 2 ** 64))
+        elif text['attachments'][0]['type'] == 'photo':
+            id = text['attachments'][0]['photo']['id']
+            owner_id = text['attachments'][0]['photo']['owner_id']
+            attachment = f'photo{owner_id}_{id}'
+            if 'access_key' in text['attachments'][0]['photo'].keys():
+                attachment += f"_{text['attachments'][0]['photo']['access_key']}"
+            vk.messages.send(user_id=user,
+                             attachment=attachment,
+                             random_id=random.randint(0, 2 ** 64))
 
-    elif text['attachments'][0]['type'] == 'audio':
-        id = text['attachments'][0]['audio']['id']
-        attachment = f'audio{user}_{id}'
-        if 'access_key' in text['attachments'][0]['audio'].keys():
-            attachment += f"_{text['attachments'][0]['audio']['access_key']}"
-        vk.messages.send(user_id=user,
-                         attachment=attachment,
-                         random_id=random.randint(0, 2 ** 64))
+        elif text['attachments'][0]['type'] == 'audio':
+            id = text['attachments'][0]['audio']['id']
+            owner_id = text['attachments'][0]['audio']['owner_id']
+            attachment = f'audio{owner_id}_{id}'
+            if 'access_key' in text['attachments'][0]['audio'].keys():
+                attachment += f"_{text['attachments'][0]['audio']['access_key']}"
+            vk.messages.send(user_id=user,
+                             attachment=attachment,
+                             random_id=random.randint(0, 2 ** 64))
 
-    elif text['attachments'][0]['type'] == 'doc':
-        # TODO ВЛОЖЕНИЕ УДАЛЕНО
-        id = text['attachments'][0]['doc']['id']
-        attachment = f'doc{user}_{id}'
-        if 'access_key' in text['attachments'][0]['doc'].keys():
-            attachment += f"_{text['attachments'][0]['doc']['access_key']}"
-        vk.messages.send(user_id=user,
-                         attachment=attachment,
+        elif text['attachments'][0]['type'] == 'doc':
+            # TODO ВЛОЖЕНИЕ УДАЛЕНО
+            id = text['attachments'][0]['doc']['id']
+            owner_id = text['attachments'][0]['doc']['owner_id']
+            attachment = f'doc{owner_id}_{id}'
+            if 'access_key' in text['attachments'][0]['doc'].keys():
+                attachment += f"_{text['attachments'][0]['doc']['access_key']}"
+            vk.messages.send(user_id=user,
+                             attachment=attachment,
+                             random_id=random.randint(0, 2 ** 64))
+        else:
+            pprint(text)
+            vk.messages.send(user_id=user,
+                             message='Сорри мы пока не можем обрабатывать такие файлы',
+                             random_id=random.randint(0, 2 ** 64))
+    elif "text" in text:
+        vk.messages.send(user_id=user, message=text["text"],
                          random_id=random.randint(0, 2 ** 64))
     else:
-        pprint(text)
-        vk.messages.send(user_id=user,
-                         message='Сорри мы пока не можем обрабатывать такие файлы',
-                         random_id=random.randint(0, 2 ** 64))
+        print("WARRING к нам пришло что-то не то", text)
 
 
 if __name__ == '__main__':
@@ -170,36 +182,7 @@ if __name__ == '__main__':
                 TEST = not TEST  # TODO Убрать на релизе
                 print(TEST)
             elif TEST:
-                user_id = 238705165
-                user_info = vk.users.get(user_ids=user_id)[0]
-                vk.messages.send(user_id=user_id,
-                                 message=f'''Привет, {user_info['last_name']} {user_info['first_name']}!
-                                                        Вы вступили в группу! Для того чтобы продолжить общение,
-                                                        Хотите узнать мои функции - напишите /help''',
-                                 random_id=random.randint(0, 2 ** 64))
-                # Получаем из профиля пользователя данные о нём
-                data = vk.users.get(user_ids=user_id, fields='city, bdate, sex')[0]
-                if data['sex'] == 1:
-                    sex = 'Женский'
-                elif data['sex'] == 2:
-                    sex = 'Мужской'
-                else:
-                    sex = 'Не указан'
-
-                if 'city' in data.keys():
-                    city = data['city']['title']
-                else:
-                    city = 'Не указан'
-
-                if 'bdate' in data.keys():
-                    today = date.today()
-                    day, month, year = tuple(map(int, data['bdate'].split('.')))
-                    age = str(today.year - year - ((today.month, today.day) < (month, day)))
-                else:
-                    age = 'Не указан'
-
-                update_user_data(db_session, user_id, {"sex": sex, "age": age, "city": city})
-                print('Создание пользователя...', user_id, sex, age, city)
+                pass
 
             elif last_text == '/communication':
                 vk.messages.send(user_id=user_id,
@@ -208,13 +191,16 @@ if __name__ == '__main__':
                                  random_id=random.randint(0, 2 ** 64))
             elif text == '/anonymous_user':
                 # Поиск собеседников
-                people = search_for_familiar_people(db_session, user_id)
+                user_info = get_user_info(db_session, user_id)
+                people = search_for_familiar_people(db_session, get_user(db_session, user_id),
+                                                    user_info["age"], user_info["city"],
+                                                    user_info["sex"])
                 print(people, 'вот кого мы нашли')
-                id_interlocutor = random.choices(people) if people else []
+                id_interlocutor = random.choices(people) if people else 238705165
                 if id_interlocutor:
 
                     message = f'''Вот кого мы нашли:
-                                        {get_user_info(id_interlocutor)}
+                                        {get_user_info(db_session, id_interlocutor)}
                                         Если желаете начать общение то напишите Y
                                         Если хотите кого нибудь другого то N
                                         Если вам начинают попадаться те же самые люди то расширте
@@ -230,6 +216,7 @@ if __name__ == '__main__':
                                                               "попытайтесь позже или расширте "
                                                               "круг поиска",
                                      random_id=random.randint(0, 2 ** 64))
+
             elif last_text == '/anonymous_user':
                 if text == 'Y':
                     message = '''Вы подключились к собеседнику, все дальнейие сообщения будут 
@@ -237,11 +224,12 @@ if __name__ == '__main__':
                     vk.messages.send(user_id=user_id, message=message,
                                      random_id=random.randint(0, 2 ** 64))
 
-                    update_user_data(db_session, get_interlocutor(user_id), dictionary={
+                    update_user_data(db_session, get_interlocutor(db_session, user_id), dictionary={
                         "interlocutor": user_id})
-                    message = f'''К вам подключился пользователь! {get_user_info(user_id)}
+                    message = f'''К вам подключился пользователь! {get_user_info(db_session,
+                                                                                 user_id)}
                               Вы всегда можете написать /stop и не общаться с ним'''
-                    vk.messages.send(user_id=user_id, message=message,
+                    vk.messages.send(user_id=get_interlocutor(db_session, user_id), message=message,
                                      random_id=random.randint(0, 2 ** 64))
                 elif text == '/stop':
                     update_user_data(db_session, user_id, dictionary={"interlocutor": None})
@@ -254,20 +242,27 @@ if __name__ == '__main__':
                                  пользователю балл.
                                  Максимум - +50, минимум - -50. Пишите целые числа, пожалуйста.''',
                                  random_id=random.randint(0, 2 ** 64))
+                vk.messages.send(user_id=user_id,
+                                 message='''С вами прекратили общение, поставьте этому 
+                                                 пользователю балл.
+                                                 Максимум - +50, минимум - -50. Пишите целые числа, пожалуйста.''',
+                                 random_id=random.randint(0, 2 ** 64))
+                update_user_data(db_session, get_interlocutor(db_session, user_id), dictionary={
+                    "last_text": '/stop'})
             elif last_text == '/stop':
-                if text.isdight() and -50 <= int(text) <= 50:
+                if text.isdigit() and -50 <= int(text) <= 50:
                     scores_of_karma = int(text)
+                    vk.messages.send(user_id=user_id, message='Спасибо за отзыв!',
+                                     random_id=random.randint(0, 2 ** 64))
                 else:
                     vk.messages.send(user_id=user_id, message="Вы ввели не число \nЕсли не хотите "
-                                                              "менять рэйтин то введите - 0")
+                                                              "менять рэйтин то введите - 0",
+                                     random_id=random.randint(0, 2 ** 64))
                     continue
                 update_user_data(db_session, get_interlocutor(db_session, user_id),
                                  {'scores': scores_of_karma})
             else:
-                try:
-                    send_text_or_file(text, user_id)
-                except Exception as e:
-                    print(e)
+                send_text_or_file(event.obj.message, user_id)
 
             # После всех возможных вариантов сообщений меняем last_text на text
             update_user_data(db_session, user_id, {'last_text': text})

@@ -26,6 +26,13 @@ def get_description(db_session, user_id):
         return ""
     return user.description
 
+def get_user(db_session, user_id):
+    """Возращает пользователя как объект таблицы"""
+    session = db_session.create_session()
+    user = session.query(User).get(user_id)
+    if not user:
+        return ""
+    return user
 
 def get_user_info(db_session, user_id):
     session = db_session.create_session()
