@@ -1,7 +1,7 @@
 from main import *
 
 
-def search_for_familiar_people(user, age, city, sex, scores):
+def search_for_familiar_people(db_session, user, age=None, city=None, sex=None, scores=None):
     session = db_session.create_session()
     age_dif = 1
     scores_dif = 100
