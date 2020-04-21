@@ -1,15 +1,20 @@
 from main import *
 
 
-def search_for_familiar_people(user):
+def search_for_familiar_people(user, age, city, sex, scores):
     session = db_session.create_session()
-    age = user.age
+    age_dif = 1
+    scores_dif = 100
     if age is None:
-        age = 16
-    city = user.city
-    if city is None:
-        city = 'Тула'
+        age = 100
+        age_dif = 100
+    if scores is None:
+        scores = 100000
+        scores_dif = 10000
     friends = []
-    for friend in session.query(User).filter(User.age >= age - 1, User.age <= age + 1, User.city == city):
-        friends.append(friend)
+    for friend in session.query(User).filter(User.age >= age - age_dif, User.age <= age + age_dif,
+                                             User.sex == sex, User.scores >= scores - scores_dif,
+                                             User.scores <= scores + scores_dif):
+        if friend.vk_id != user.vk_id and (friend.city == city or city is None) and (friend.sex == sex or sex is None):
+            friends.append(friend.vk_id)
     return friends
