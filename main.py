@@ -163,7 +163,7 @@ if __name__ == '__main__':
                                  message='''Я совсем молодой бот, поэтому далеко не на 
                                             все смогу поговорить.''', random_id=random.randint(0, 2 ** 64))
             elif last_text == '/anonym_questionnaire':
-                # TODO random_questionnaire =
+                #random_questionnaire = SELECT FROM ''
                 # берем рандомную анкетку из БД
                 vk.message.send(user_id=user,
                                 message=random_questionnaire,
