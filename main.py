@@ -125,8 +125,10 @@ def main():
                                          "age, city, sex - необезательные переменные для уточнения поиска\n"
                                          "при их отсутвии бот посторается найти наилучшего собеседника\n"
                                          "Захотите прекратить общение - /stop в помощь.\n"
+                                         "Хотите открыть свою страницу - /show_me.\n"
                                          "Также вы можете просто пообщаться со мной - /communication.\n"
                                          "Если у вас есть предложения то пишите на почту bessarab.2003@yandex.ru\n"
+                                         "nastya.nedoseicko@yandex.ru\n"
                                          "Чего желаете вы?",
                                  random_id=random.randint(0, 2 ** 64))
             # Изменение каких то данных в бд
@@ -196,6 +198,11 @@ def main():
                     update_user_data(db_session, user_id, {"interlocutor": None})
                 else:
                     continue
+
+            elif last_text == '/show_me':
+                vk.message.send(user_id=get_interlocutor(db_session, user_id),
+                                     message=f'Собеседник захотел открыться вам. Вот его ID - {user_id}',
+                                     random_id=random.randint(0, 2 ** 64))
 
             elif text == '/stop':
                 # Если при общении пользователь пишет /stop то просим его ввести число
