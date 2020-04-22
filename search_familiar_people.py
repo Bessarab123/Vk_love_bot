@@ -1,3 +1,5 @@
+from data.user import *
+
 def search_for_familiar_people(db_session, user, age, city, sex):
     """Ищем пользователей по критериям
     user - пользователь из таблицы
