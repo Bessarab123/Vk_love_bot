@@ -1,5 +1,6 @@
 from data.user import *
 
+
 def search_for_familiar_people(db_session, user, age, city, sex):
     """Ищем пользователей по критериям
     user - пользователь из таблицы
@@ -22,6 +23,7 @@ def search_for_familiar_people(db_session, user, age, city, sex):
     for friend in session.query(User).filter(User.age >= age - age_dif, User.age <= age + age_dif,
                                              User.scores >= scores - scores_dif,
                                              User.scores <= scores + scores_dif):
-        if friend.vk_id != user.vk_id and (friend.city == city or city is None) and (friend.sex == sex or sex is None):
+        if friend.vk_id != user.vk_id and (friend.city == city or city is None) and (friend.sex == sex or sex is None) \
+                and friend.interlocutor is None:
             friends.append(friend.vk_id)
     return friends
