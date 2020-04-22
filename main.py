@@ -11,7 +11,6 @@ from search_familiar_people import search_for_familiar_people
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
 
-
 def get_vk_session():
     # Взять session группы
     with open("pass.json") as f:
@@ -21,7 +20,7 @@ def get_vk_session():
     return vk_session
 
 
-def send_text_or_file(text, user_id):
+def send_text_or_file(text, user_id, vk):
     """Обработка сообщений и последующая их отправка указонаму юзеру
     media - словарь с информацие о пришедшем сообщении
     user_id - id пользователя vk от кого надо отправить сообщение"""
@@ -87,7 +86,7 @@ def send_text_or_file(text, user_id):
         print("WARRING к нам пришло что-то не то", text)
 
 
-if __name__ == '__main__':
+def main():
     TEST = False  # Переменная для тестов
     vk_session = get_vk_session()  # Создаём сессию
     vk = vk_session.get_api()
@@ -235,7 +234,7 @@ if __name__ == '__main__':
                 # Если это не команда то смотрим общается ли пользоваетль с кем-то
                 if get_interlocutor(db_session, user_id):
                     # Если пользователь общается с кем-то
-                    send_text_or_file(event.obj.message, user_id)
+                    send_text_or_file(event.obj.message, user_id, vk)
                 else:
                     # Если пользователь надеется поговорить с нами
                     vk.messages.send(user_id=user_id, message='Разраб ленивый и не предусмотрел '
@@ -250,3 +249,7 @@ if __name__ == '__main__':
             update_db(db_session, vk)
             time.sleep(1)
             TEST = False
+
+
+if __name__ == '__main__':
+    main()
