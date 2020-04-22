@@ -7,10 +7,10 @@ from sqlalchemy_serializer import SerializerMixin
 class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     __tablename__ = 'users'
     vk_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=True, primary_key=True)
-    age = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    age = sqlalchemy.Column(sqlalchemy.Integer, nullable=True,default=16)
     sex = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     city = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     description = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    scores = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    scores = sqlalchemy.Column(sqlalchemy.Integer, nullable=True,default=0)
     last_message = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
-    last_anonym_user_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    interlocutor = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
