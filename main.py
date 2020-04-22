@@ -1,3 +1,4 @@
+# - *- coding: utf- 8 - *-
 import datetime
 import random
 import time
@@ -19,7 +20,7 @@ def get_vk_session():
     return vk_session
 
 
-def send_text_or_file(text, user_id):
+def send_text_or_file(text, user_id, vk):
     """Обработка сообщений и последующая их отправка указонаму юзеру
     media - словарь с информацие о пришедшем сообщении
     user_id - id пользователя vk от кого надо отправить сообщение"""
@@ -85,7 +86,7 @@ def send_text_or_file(text, user_id):
         print("WARRING к нам пришло что-то не то", text)
 
 
-if __name__ == '__main__':
+def main():
     TEST = False  # Переменная для тестов
     vk_session = get_vk_session()  # Создаём сессию
     vk = vk_session.get_api()
@@ -97,14 +98,13 @@ if __name__ == '__main__':
         if event.type == VkBotEventType.GROUP_JOIN:
             # позволяет группе отправлять сообщения новоприбывшему
             user_id = event.obj["user_id"]
-            create_data_user(user_id)
+            create_data_user(db_session, user_id, vk)
             user_info = vk.users.get(user_ids=user_id)[0]
             vk.messages.send(user_id=user_id,
-                             message=f'''Привет, {user_info['last_name']} {user_info['first_name']}!
-                                        Вы вступили в группу! Для того чтобы продолжить общение,
-                                        Хотите узнать мои функции - напишите /help''',
+                             message=f"Привет, {user_info['last_name']} {user_info['first_name']}!\n"
+                                     "Вы вступили в группу! Для того чтобы продолжить общение,"
+                                     "Хотите узнать мои функции - напишите /help",
                              random_id=random.randint(0, 2 ** 64))
-
 
         if event.type == VkBotEventType.MESSAGE_NEW:
             # Если пришло сообщение
@@ -121,9 +121,12 @@ if __name__ == '__main__':
                                          "/set_city - поменять город\n"
                                          "/set_age - поменять возраст\n"
                                          "/set_sex - поменять пол\n"
-                                         "/anonymous_user - познакомиться с кем-нибудь\n"
+                                         "/anonymous_user age:17,city:Тула,sex:1, - познакомиться с кем-нибудь\n"
+                                         "age, city, sex - необезательные переменные для уточнения поиска\n"
+                                         "при их отсутвии бот посторается найти наилучшего собеседника\n"
                                          "Захотите прекратить общение - /stop в помощь.\n"
                                          "Также вы можете просто пообщаться со мной - /communication.\n"
+                                         "Если у вас есть предложения то пишите на почту bessarab.2003@yandex.ru\n"
                                          "Чего желаете вы?",
                                  random_id=random.randint(0, 2 ** 64))
             # Изменение каких то данных в бд
@@ -139,15 +142,13 @@ if __name__ == '__main__':
             elif text == '/test':
                 TEST = not TEST  # TODO Убрать на релизе
                 print(TEST)
-            elif TEST:
-                pass
 
             elif last_text == '/communication':
                 vk.messages.send(user_id=user_id,
                                  message='''Я совсем молодой бот, поэтому далеко не на 
                                             все смогу поговорить.''',
                                  random_id=random.randint(0, 2 ** 64))
-            elif text == '/anonymous_user':
+            elif '/anonymous_user' in text:
                 # Поиск собеседников
                 user_info = get_user_info(db_session, user_id)
                 people = search_for_familiar_people(db_session, get_user(db_session, user_id),
@@ -156,7 +157,7 @@ if __name__ == '__main__':
                 print(people, 'вот кого мы нашли')
                 id_interlocutor = random.choices(people) if people else 238705165
                 if id_interlocutor:
-
+                    # Если был подобран собеседник
                     message = f'''Вот кого мы нашли:
                                   {get_user_info(db_session, id_interlocutor)}
                                   Если желаете начать общение то напишите Y
@@ -179,7 +180,7 @@ if __name__ == '__main__':
                 # Предлагаем пользователю согласиться связаться с пользователем
                 if text == 'Y':
                     message = '''Вы подключились к собеседнику, все дальнейие сообщения будут 
-                    отправлены ему, чтобы пректратить общение пропишите /stop'''
+                    отправлены ему, чтобы пректратить общение пропишите /stop_search'''
                     vk.messages.send(user_id=user_id, message=message,
                                      random_id=random.randint(0, 2 ** 64))
 
@@ -233,7 +234,7 @@ if __name__ == '__main__':
                 # Если это не команда то смотрим общается ли пользоваетль с кем-то
                 if get_interlocutor(db_session, user_id):
                     # Если пользователь общается с кем-то
-                    send_text_or_file(event.obj.message, user_id)
+                    send_text_or_file(event.obj.message, user_id, vk)
                 else:
                     # Если пользователь надеется поговорить с нами
                     vk.messages.send(user_id=user_id, message='Разраб ленивый и не предусмотрел '
@@ -244,6 +245,11 @@ if __name__ == '__main__':
             # После всех возможных вариантов сообщений меняем last_text на text
             update_user_data(db_session, user_id, {'last_text': text})
         if datetime.datetime.now().strftime("%H:%M:%S") == "00:00:30" or TEST:
-                update_db(db_session, vk)
-                time.sleep(1)
-                TEST = False
+            # Обновление базы данных
+            update_db(db_session, vk)
+            time.sleep(1)
+            TEST = False
+
+
+if __name__ == '__main__':
+    main()
