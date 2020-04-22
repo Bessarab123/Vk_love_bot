@@ -103,7 +103,8 @@ def main():
             vk.messages.send(user_id=user_id,
                              message=f"Привет, {user_info['last_name']} {user_info['first_name']}!\n"
                                      "Вы вступили в группу! Для того чтобы продолжить общение,"
-                                     "Хотите узнать мои функции - напишите /help",
+                                     "Хотите узнать мои функции - напишите /help\n"
+                                     "Только, есть одно маленькое требование - пишите цензурно, без мата.",
                              random_id=random.randint(0, 2 ** 64))
 
         if event.type == VkBotEventType.MESSAGE_NEW:
@@ -148,8 +149,13 @@ def main():
             elif last_text == '/communication':
                 vk.messages.send(user_id=user_id,
                                  message='''Я совсем молодой бот, поэтому далеко не на 
-                                            все смогу поговорить.''',
+                                            все смогу поговорить. Могу морально поддержать.''',
                                  random_id=random.randint(0, 2 ** 64))
+                if 'плохо' in last_text or 'ужасно' in last_text or 'отвратительно' in last_text or 'мерзко' in last_text:
+                    vk.messages.send(user_id=user_id,
+                                     message='''Не расстраивайтесь! Когда вы считаете, что все очень плохо, то потом
+                                                будет просто замечательно.''',
+                                     random_id=random.randint(0, 2 ** 64))
             elif '/anonymous_user' in text:
                 # Поиск собеседников
                 user_info = get_user_info(db_session, user_id)
