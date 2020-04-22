@@ -1,41 +1,21 @@
+import datetime
 import random
+import time
 from pprint import pprint
-
 import vk_api
 import json
 from data import db_session
-from datetime import date
 from update_data import *
-from search_familiar_people import *
+from search_familiar_people import search_for_familiar_people
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
 
-def get_vk_session(user=True):
-    def auth_handler():
-        """ При двухфакторной аутентификации вызывается эта функция. """
-        key = input("Enter authentication code: ")
-        remember_device = 'Y' in input("Remeber? Y/N :")
-        return key, remember_device
-
-    if user:
-        # Взять session юзера
-        with open("pass.json") as f:
-            data = json.load(f)
-            password = data["password"]
-            login = data["login"]
-        vk_session = vk_api.VkApi(password, login, auth_handler=auth_handler)
-        try:
-            vk_session.auth()
-        except vk_api.AuthError as error_msg:
-            print(error_msg)
-            return
-    else:
-        # Взять session группы
-        with open("pass.json") as f:
-            data = json.load(f)
-            api = data["api"]
-        vk_session = vk_api.VkApi(
-            token=api)
+def get_vk_session():
+    # Взять session группы
+    with open("pass.json") as f:
+        data = json.load(f)
+        api = data["api"]
+    vk_session = vk_api.VkApi(token=api)
     return vk_session
 
 
@@ -43,7 +23,6 @@ def send_text_or_file(text, user_id):
     """Обработка сообщений и последующая их отправка указонаму юзеру
     media - словарь с информацие о пришедшем сообщении
     user_id - id пользователя vk от кого надо отправить сообщение"""
-    pprint(text)
     user = get_interlocutor(db_session, user_id)
     if text['attachments'] != []:
         if text['attachments'][0]['type'] == 'audio_message':
@@ -107,8 +86,8 @@ def send_text_or_file(text, user_id):
 
 
 if __name__ == '__main__':
-    TEST = False
-    vk_session = get_vk_session(False)
+    TEST = False  # Переменная для тестов
+    vk_session = get_vk_session()  # Создаём сессию
     vk = vk_session.get_api()
     db_session.global_init("vk_love_bot.db")
     longpoll = VkBotLongPoll(vk_session, 193209431)
@@ -118,35 +97,14 @@ if __name__ == '__main__':
         if event.type == VkBotEventType.GROUP_JOIN:
             # позволяет группе отправлять сообщения новоприбывшему
             user_id = event.obj["user_id"]
+            create_data_user(user_id)
             user_info = vk.users.get(user_ids=user_id)[0]
             vk.messages.send(user_id=user_id,
                              message=f'''Привет, {user_info['last_name']} {user_info['first_name']}!
                                         Вы вступили в группу! Для того чтобы продолжить общение,
                                         Хотите узнать мои функции - напишите /help''',
                              random_id=random.randint(0, 2 ** 64))
-            # Получаем из профиля пользователя данные о нём
-            data = vk.users.get(user_ids=user_id, fields='city, bdate, sex')[0]
-            if data['sex'] == 1:
-                sex = 'Женский'
-            elif data['sex'] == 2:
-                sex = 'Мужской'
-            else:
-                sex = 'Не указан'
 
-            if 'city' in data.keys():
-                city = data['city']['title']
-            else:
-                city = 'Не указан'
-
-            if 'bdate' in data.keys():
-                today = date.today()
-                day, month, year = tuple(map(int, data['bdate'].split('.')))
-                age = str(today.year - year - ((today.month, today.day) < (month, day)))
-            else:
-                age = 'Не указан'
-
-            update_user_data(db_session, user_id, {"sex": sex, "age": age, "city": city})
-            print('Создание пользователя...', user_id, sex, age, city)
 
         if event.type == VkBotEventType.MESSAGE_NEW:
             # Если пришло сообщение
@@ -158,17 +116,16 @@ if __name__ == '__main__':
             # Обратока сообщений условиями
             if text == '/help':
                 vk.messages.send(user_id=user_id,
-                                 message='''Я могу познакомить вас анонимно с пользователем.
-                                         Но для этого заполните небольшую анкету - 
-                                         /set_description.
-                                         /set_city - поменять город
-                                         /set_age - поменять возраст
-                                         /set_sex - поменять пол
-                                         Показать анкету случайного пользователя - 
-                                         /anonymous_user.
-                                         Захотите прекратить общение - /stop в помощь.
-                                         Также вы можете просто пообщаться со мной - /communication.
-                                         Чего желаете вы?''', random_id=random.randint(0, 2 ** 64))
+                                 message="Я могу познакомить вас анонимно с пользователем.\n"
+                                         "/set_description - Заполнить анкету\n"
+                                         "/set_city - поменять город\n"
+                                         "/set_age - поменять возраст\n"
+                                         "/set_sex - поменять пол\n"
+                                         "/anonymous_user - познакомиться с кем-нибудь\n"
+                                         "Захотите прекратить общение - /stop в помощь.\n"
+                                         "Также вы можете просто пообщаться со мной - /communication.\n"
+                                         "Чего желаете вы?",
+                                 random_id=random.randint(0, 2 ** 64))
             # Изменение каких то данных в бд
             elif last_text == '/set_description':
                 update_user_data(db_session, user_id, {"description": text})
@@ -177,7 +134,6 @@ if __name__ == '__main__':
             elif last_text == '/set_age':
                 update_user_data(db_session, user_id, {"age": text})
             elif last_text == '/set_sex':
-                # Кстати можно брать данные по инфе из профиля пользователя
                 update_user_data(db_session, user_id, {"sex": text})
 
             elif text == '/test':
@@ -202,11 +158,11 @@ if __name__ == '__main__':
                 if id_interlocutor:
 
                     message = f'''Вот кого мы нашли:
-                                        {get_user_info(db_session, id_interlocutor)}
-                                        Если желаете начать общение то напишите Y
-                                        Если хотите кого нибудь другого то N
-                                        Если вам начинают попадаться те же самые люди то расширте
-                                        круг поиска'''
+                                  {get_user_info(db_session, id_interlocutor)}
+                                  Если желаете начать общение то напишите Y
+                                  Если хотите кого нибудь другого то N
+                                  Если вам начинают попадаться те же самые люди то расширте
+                                  круг поиска'''
 
                     update_user_data(db_session, user_id, {
                         "interlocutor": id_interlocutor})
@@ -220,6 +176,7 @@ if __name__ == '__main__':
                                      random_id=random.randint(0, 2 ** 64))
 
             elif last_text == '/anonymous_user':
+                # Предлагаем пользователю согласиться связаться с пользователем
                 if text == 'Y':
                     message = '''Вы подключились к собеседнику, все дальнейие сообщения будут 
                     отправлены ему, чтобы пректратить общение пропишите /stop'''
@@ -229,48 +186,56 @@ if __name__ == '__main__':
                     update_user_data(db_session, get_interlocutor(db_session, user_id), {
                         "interlocutor": user_id})
                     message = f'''К вам подключился пользователь! {get_user_info(db_session,
-                                                                                 user_id)}
-                              Вы всегда можете написать /stop и не общаться с ним'''
-                    vk.messages.send(user_id=get_interlocutor(db_session, user_id), message=message,
+                                                                                 user_id)}\n
+                              Вы всегда можете написать /stop_search и не общаться с ним'''
+                    vk.messages.send(user_id=get_interlocutor(db_session, user_id),
+                                     message=message,
                                      random_id=random.randint(0, 2 ** 64))
-                elif text == '/stop':
+                elif text == '/stop_search':
                     update_user_data(db_session, user_id, {"interlocutor": None})
                 else:
                     continue
 
             elif text == '/stop':
+                # Если при общении пользователь пишет /stop то просим его ввести число
                 vk.messages.send(user_id=user_id,
-                                 message='''Вы соизволили прекратить общение, поставьте этому 
-                                 пользователю балл.
-                                 Максимум - +50, минимум - -50. Пишите целые числа, пожалуйста.''',
+                                 message="Вы соизволили прекратить общение, поставьте этому"
+                                         "пользователю балл.\n"
+                                         "Максимум +50, минимум -50."
+                                         " Пишите целые числа, пожалуйста.",
                                  random_id=random.randint(0, 2 ** 64))
                 vk.messages.send(user_id=get_interlocutor(db_session, user_id),
-                                 message='''С вами прекратили общение, поставьте этому 
-                                                 пользователю балл.
-                                                 Максимум - +50, минимум - -50. Пишите целые числа, пожалуйста.''',
+                                 message="С вами прекратили общение, поставьте этому "
+                                         "пользователю балл.\n"
+                                         "Максимум +50, минимум -50. "
+                                         "Пишите целые числа, пожалуйста.",
                                  random_id=random.randint(0, 2 ** 64))
                 update_user_data(db_session, get_interlocutor(db_session, user_id), {
                     "last_text": '/stop'})
             elif last_text == '/stop':
+                # Если пользователь попросил остановиться то ожидаем от него числа
                 if text.isdigit() and -50 <= int(text) <= 50:
                     scores_of_karma = int(text)
                     vk.messages.send(user_id=user_id, message='Спасибо за отзыв!',
                                      random_id=random.randint(0, 2 ** 64))
 
                 else:
-                    vk.messages.send(user_id=user_id, message="Вы ввели не число или оно  \nЕсли "
-                                                              "не "
-                                                              "хотите "
-                                                              "менять рэйтин то введите - 0",
+                    vk.messages.send(user_id=user_id, message="Вы ввели не число или оно не "
+                                                              "соответсыует указаниям"
+                                                              "\nЕсли не хотите менять "
+                                                              "рэйтин то введите - 0",
                                      random_id=random.randint(0, 2 ** 64))
                     continue
                 update_user_data(db_session, get_interlocutor(db_session, user_id),
                                  {'scores': scores_of_karma})
-                update_user_data(db_session, user_id, {"iinterlocutor": None})
+                update_user_data(db_session, user_id, {"interlocutor": None})
             else:
+                # Если это не команда то смотрим общается ли пользоваетль с кем-то
                 if get_interlocutor(db_session, user_id):
+                    # Если пользователь общается с кем-то
                     send_text_or_file(event.obj.message, user_id)
                 else:
+                    # Если пользователь надеется поговорить с нами
                     vk.messages.send(user_id=user_id, message='Разраб ленивый и не предусмотрел '
                                                               'такие слова а вот /help '
                                                               'предусмотрел',
@@ -278,3 +243,7 @@ if __name__ == '__main__':
 
             # После всех возможных вариантов сообщений меняем last_text на text
             update_user_data(db_session, user_id, {'last_text': text})
+        if datetime.datetime.now().strftime("%H:%M:%S") == "00:00:30" or TEST:
+                update_db(db_session, vk)
+                time.sleep(1)
+                TEST = False

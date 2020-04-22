@@ -1,7 +1,7 @@
-from main import *
-
-
 def search_for_familiar_people(db_session, user, age, city, sex):
+    """Ищем пользователей по критериям
+    user - пользователь из таблицы
+    age, city, sex - атрибуты для ограничения поиска"""
     session = db_session.create_session()
     scores = user.scores
     age_dif = 1
