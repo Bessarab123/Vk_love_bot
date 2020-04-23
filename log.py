@@ -7,7 +7,11 @@ logging.basicConfig(filename='logggg.log',
 
 
 def log_to_file():
-    logging.info('Вот что делает программа')
+    logging.debug('Отправлен запрос в базу данных')
+    logging.debug('Завершен запрос в базу данных')
+    logging.info('Зарегестрирован новый пользователь')
+    logging.warning('Что-то произошло не то')
+    logging.error('Ошибка при выполнении запроса')
 
 
 if __name__ == '__main__':
