@@ -7,6 +7,7 @@ import vk_api
 import json
 from data import db_session
 from update_data import *
+from log import *
 from search_familiar_people import search_for_familiar_people
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
@@ -29,6 +30,8 @@ def send_text_or_file(text, user_id, vk):
         if text['attachments'][0]['type'] == 'audio_message':
             id = text['attachments'][0]['audio_message']['id']
             access_key = text['attachments'][0]['audio_message']['access_key']
+            # здесь и далее эта функия будет писать в лог об обращении к БД
+            log_to_file_info_DB_send()
             vk.messages.send(user_id=user,
                              message=text['attachments'][0]['audio_message']['link_mp3'],
                              random_id=random.randint(0, 2 ** 64))
@@ -39,6 +42,7 @@ def send_text_or_file(text, user_id, vk):
             attachment = f'video{owner_id}_{id}'
             if 'access_key' in text['attachments'][0]['video'].keys():
                 attachment += f"_{text['attachments'][0]['video']['access_key']}"
+            log_to_file_info_DB_send()
             vk.messages.send(user_id=user,
                              attachment=attachment,
                              random_id=random.randint(0, 2 ** 64))
@@ -50,6 +54,7 @@ def send_text_or_file(text, user_id, vk):
             if 'access_key' in text['attachments'][0]['photo'].keys():
                 attachment += f"_{text['attachments'][0]['photo']['access_key']}"
             print(attachment, 'fiahosefhowweqfhoiwqhfwq')
+            log_to_file_info_DB_send()
             vk.messages.send(user_id=user,
                              attachment=attachment,
                              random_id=random.randint(0, 2 ** 64))
@@ -60,6 +65,7 @@ def send_text_or_file(text, user_id, vk):
             attachment = f'audio{owner_id}_{id}'
             if 'access_key' in text['attachments'][0]['audio'].keys():
                 attachment += f"_{text['attachments'][0]['audio']['access_key']}"
+            log_to_file_info_DB_send()
             vk.messages.send(user_id=user,
                              attachment=attachment,
                              random_id=random.randint(0, 2 ** 64))
@@ -71,15 +77,18 @@ def send_text_or_file(text, user_id, vk):
             attachment = f'doc{owner_id}_{id}'
             if 'access_key' in text['attachments'][0]['doc'].keys():
                 attachment += f"_{text['attachments'][0]['doc']['access_key']}"
+            log_to_file_info_DB_send()
             vk.messages.send(user_id=user,
                              attachment=attachment,
                              random_id=random.randint(0, 2 ** 64))
         else:
             pprint(text)
+            log_to_file_info_DB_send()
             vk.messages.send(user_id=user_id,
                              message='Сорри мы пока не можем обрабатывать такие файлы',
                              random_id=random.randint(0, 2 ** 64))
     elif "text" in text:
+        log_to_file_info_DB_send()
         vk.messages.send(user_id=user, message=text["text"],
                          random_id=random.randint(0, 2 ** 64))
     else:
@@ -96,6 +105,8 @@ def main():
 
     for event in longpoll.listen():
         if event.type == VkBotEventType.GROUP_JOIN:
+            # пишет в лог про новоприбывшего
+            log_to_file_info_DB_news_of_users()
             # позволяет группе отправлять сообщения новоприбывшему
             user_id = event.obj["user_id"]
             create_data_user(db_session, user_id, vk)
@@ -112,10 +123,14 @@ def main():
             text = event.obj.message['text']
             print(text)
             user_id = event.obj.message['from_id']
+            log_to_file_info_DB_send()
             last_text = get_last_message(db_session, user_id)
+            log_to_file_karma()
 
             # Обратока сообщений условиями
             if text == '/help':
+                log_to_file_messegas_of_users()
+                log_to_file_info_DB_send()
                 vk.messages.send(user_id=user_id,
                                  message="Я могу познакомить вас анонимно с пользователем.\n"
                                          "/set_description - Заполнить анкету\n"
@@ -134,12 +149,20 @@ def main():
                                  random_id=random.randint(0, 2 ** 64))
             # Изменение каких то данных в бд
             elif last_text == '/set_description':
+                log_to_file_messegas_of_users()
+                log_to_file_info_DB_send()
                 update_user_data(db_session, user_id, {"description": text})
             elif last_text == '/set_city':
+                log_to_file_messegas_of_users()
+                log_to_file_info_DB_send()
                 update_user_data(db_session, user_id, {"city": text})
             elif last_text == '/set_age':
+                log_to_file_messegas_of_users()
+                log_to_file_info_DB_send()
                 update_user_data(db_session, user_id, {"age": text})
             elif last_text == '/set_sex':
+                log_to_file_messegas_of_users()
+                log_to_file_info_DB_send()
                 update_user_data(db_session, user_id, {"sex": text})
 
             elif text == '/test':
@@ -147,17 +170,22 @@ def main():
                 print(TEST)
 
             elif last_text == '/communication':
+                log_to_file_messegas_of_users()
+                log_to_file_info_DB_send()
                 vk.messages.send(user_id=user_id,
                                  message='''Я совсем молодой бот, поэтому далеко не на 
                                             все смогу поговорить. Могу морально поддержать.''',
                                  random_id=random.randint(0, 2 ** 64))
                 if 'плохо' in last_text or 'ужасно' in last_text or 'отвратительно' in last_text or 'мерзко' in last_text:
+                    log_to_file_info_DB_send()
                     vk.messages.send(user_id=user_id,
                                      message='''Не расстраивайтесь! Когда вы считаете, что все очень плохо, то потом
                                                 будет просто замечательно.''',
                                      random_id=random.randint(0, 2 ** 64))
             elif '/anonymous_user' in text:
+                log_to_file_messegas_of_users()
                 # Поиск собеседников
+                log_to_file_info_DB_send()
                 user_info = get_user_info(db_session, user_id)
                 people = search_for_familiar_people(db_session, get_user(db_session, user_id),
                                                     user_info["age"], user_info["city"],
@@ -166,99 +194,124 @@ def main():
                 id_interlocutor = random.choices(people) if people else 238705165
                 if id_interlocutor:
                     # Если был подобран собеседник
+                    log_to_file_info_DB_send()
                     message = f'''Вот кого мы нашли:
                                   {get_user_info(db_session, id_interlocutor)}
                                   Если желаете начать общение то напишите Y
                                   Если хотите кого нибудь другого то N
                                   Если вам начинают попадаться те же самые люди то расширте
                                   круг поиска'''
-
+                    log_to_file_info_DB_send()
                     update_user_data(db_session, user_id, {
                         "interlocutor": id_interlocutor})
-
+                    log_to_file_info_DB_send()
                     vk.messages.send(user_id=user_id, message=message,
                                      random_id=random.randint(0, 2 ** 64))
                 else:
+                    log_to_file_info_DB_send()
                     vk.messages.send(user_id=user_id, message="Кажется мы никого не нашли "
                                                               "попытайтесь позже или расширте "
                                                               "круг поиска",
                                      random_id=random.randint(0, 2 ** 64))
 
             elif last_text == '/anonymous_user':
+                log_to_file_messegas_of_users()
                 # Предлагаем пользователю согласиться связаться с пользователем
                 if text == 'Y':
                     message = '''Вы подключились к собеседнику, все дальнейие сообщения будут 
                     отправлены ему, чтобы пректратить общение пропишите /stop_search'''
+                    log_to_file_info_DB_send()
                     vk.messages.send(user_id=user_id, message=message,
                                      random_id=random.randint(0, 2 ** 64))
-
+                    log_to_file_info_DB_send()
                     update_user_data(db_session, get_interlocutor(db_session, user_id), {
                         "interlocutor": user_id})
+                    log_to_file_info_DB_send()
                     message = f'''К вам подключился пользователь! {get_user_info(db_session,
                                                                                  user_id)}\n
                               Вы всегда можете написать /stop_search и не общаться с ним'''
+                    log_to_file_info_DB_send()
                     vk.messages.send(user_id=get_interlocutor(db_session, user_id),
                                      message=message,
                                      random_id=random.randint(0, 2 ** 64))
                 elif text == '/stop_search':
+                    log_to_file_messegas_of_users()
+                    log_to_file_info_DB_send()
                     update_user_data(db_session, user_id, {"interlocutor": None})
                 else:
                     continue
 
             elif last_text == '/show_me':
+                log_to_file_disclosure_of_indentity()
+                log_to_file_messegas_of_users()
+                log_to_file_info_DB_send()
                 vk.message.send(user_id=get_interlocutor(db_session, user_id),
                                      message=f'Собеседник захотел открыться вам. Вот его ID - {user_id}',
                                      random_id=random.randint(0, 2 ** 64))
 
             elif text == '/stop':
+                log_to_file_stop_of_user()
+                log_to_file_messegas_of_users()
                 # Если при общении пользователь пишет /stop то просим его ввести число
+                log_to_file_info_DB_send()
                 vk.messages.send(user_id=user_id,
                                  message="Вы соизволили прекратить общение, поставьте этому"
                                          "пользователю балл.\n"
                                          "Максимум +50, минимум -50."
                                          " Пишите целые числа, пожалуйста.",
                                  random_id=random.randint(0, 2 ** 64))
+                log_to_file_info_DB_send()
                 vk.messages.send(user_id=get_interlocutor(db_session, user_id),
                                  message="С вами прекратили общение, поставьте этому "
                                          "пользователю балл.\n"
                                          "Максимум +50, минимум -50. "
                                          "Пишите целые числа, пожалуйста.",
                                  random_id=random.randint(0, 2 ** 64))
+                log_to_file_info_DB_send()
                 update_user_data(db_session, get_interlocutor(db_session, user_id), {
                     "last_text": '/stop'})
             elif last_text == '/stop':
                 # Если пользователь попросил остановиться то ожидаем от него числа
+                log_to_file_score_distribution()
                 if text.isdigit() and -50 <= int(text) <= 50:
                     scores_of_karma = int(text)
+                    log_to_file_info_DB_send()
                     vk.messages.send(user_id=user_id, message='Спасибо за отзыв!',
                                      random_id=random.randint(0, 2 ** 64))
 
                 else:
+                    log_to_file_info_DB_send()
                     vk.messages.send(user_id=user_id, message="Вы ввели не число или оно не "
                                                               "соответсыует указаниям"
                                                               "\nЕсли не хотите менять "
                                                               "рэйтин то введите - 0",
                                      random_id=random.randint(0, 2 ** 64))
                     continue
+                log_to_file_info_DB_send()
                 update_user_data(db_session, get_interlocutor(db_session, user_id),
                                  {'scores': scores_of_karma})
                 update_user_data(db_session, user_id, {"interlocutor": None})
             else:
                 # Если это не команда то смотрим общается ли пользоваетль с кем-то
+                log_to_file_info_DB_send()
                 if get_interlocutor(db_session, user_id):
                     # Если пользователь общается с кем-то
+                    log_to_file_info_DB_send()
                     send_text_or_file(event.obj.message, user_id, vk)
                 else:
                     # Если пользователь надеется поговорить с нами
+                    log_to_file_info_DB_send()
                     vk.messages.send(user_id=user_id, message='Разраб ленивый и не предусмотрел '
                                                               'такие слова а вот /help '
                                                               'предусмотрел',
                                      random_id=random.randint(0, 2 ** 64))
 
             # После всех возможных вариантов сообщений меняем last_text на text
+            log_to_file_info_DB_send()
             update_user_data(db_session, user_id, {'last_text': text})
         if datetime.datetime.now().strftime("%H:%M:%S") == "00:00:30" or TEST:
             # Обновление базы данных
+            log_to_file_update_DB()
             update_db(db_session, vk)
             time.sleep(1)
             TEST = False
