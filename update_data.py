@@ -1,5 +1,8 @@
+import datetime
+from log import log_to_file_info_DB_news_of_users, log_to_file_error_with_DB, log_ban_user
+
 from data.user import *
-from datetime import date
+
 
 
 class ErrorGetData(Exception):
@@ -10,10 +13,7 @@ def get_last_message(db_session, user_id):
     """Возращает последние сообщение пользователя по id
     db_session - сэссия БД
     user_id - id пользователя vk и в БД"""
-    session = db_session.create_session()
-    user = session.query(User).get(user_id)
-    if not user:
-        raise ErrorGetData
+    user = get_user(db_session, user_id)
     return user.last_message
 
 
@@ -21,10 +21,7 @@ def get_interlocutor(db_session, user_id):
     """Возращает id собеседника или None
     db_session - сэссия БД
     user_id - id пользователя vk и в БД"""
-    session = db_session.create_session()
-    user = session.query(User).get(user_id)
-    if not user:
-        raise ErrorGetData
+    user = get_user(db_session, user_id)
     return user.interlocutor
 
 
@@ -32,11 +29,16 @@ def get_description(db_session, user_id):
     """Возращает по id анкету собеседника
     db_session - сэссия БД
     user_id - id пользователя vk и в БД"""
-    session = db_session.create_session()
-    user = session.query(User).get(user_id)
-    if not user:
-        raise ErrorGetData
+    user = get_user(db_session, user_id)
     return user.description
+
+
+def get_score(db_session, user_id):
+    """Возращает очки пользователя по id
+    db_session - сэссия БД
+    user_id - id пользователя vk и в БД"""
+    user = get_user(db_session, user_id)
+    return user.scores
 
 
 def get_user(db_session, user_id):
@@ -45,21 +47,20 @@ def get_user(db_session, user_id):
     user_id - id пользователя vk и в БД"""
     session = db_session.create_session()
     user = session.query(User).get(user_id)
+    session.commit()
     if not user:
+        log_to_file_error_with_DB()
         raise ErrorGetData
     return user
 
 
-def get_user_info(db_session, user_id) -> dict:
+def get_user_info(db_session, user_id) -> str:
     """Возращает доп. информацию о пользователе по id
     db_session - сэссия БД
     user_id - id пользователя vk и в БД"""
-    session = db_session.create_session()
-    user = session.query(User).get(user_id)
-    if not user:
-        raise ErrorGetData
-    return {"age": user.age, "city": user.city, "sex": user.sex, "description": user.description}
-
+    user = get_user(db_session, user_id)
+    return f"Возраст {user.age}, пол: {user.sex}, Город: {user.city}, Вот его анкета:" \
+           f" {user.description}\n"
 
 def update_user_data(db_session, user_id, dictionary={}):
     """Изменить данные в БД или добавить пользователя в БД
@@ -75,7 +76,6 @@ def update_user_data(db_session, user_id, dictionary={}):
         # Если нет пользоваетеля то его создаем
         user = User()
         user.vk_id = user_id
-        user.scores = 500
         session.add(user)
     for key in dictionary.keys():
         if key == "last_text":
@@ -92,10 +92,12 @@ def update_user_data(db_session, user_id, dictionary={}):
             user.description = dictionary[key]
         elif key == "interlocutor":
             user.interlocutor = dictionary[key]
+        elif key == "in_group":
+            user.in_group = dictionary[key] if dictionary[key] != None else user.in_group
     session.commit()
 
 
-def create_data_user(db_session, user_id, vk):
+def create_data_user(db_session, user_id, vk, goin=None):
     """Собарть данные пользователя из vk по его id """
     # Получаем из профиля пользователя данные о нём
     data = vk.users.get(user_ids=user_id, fields='city, bdate, sex')[0]
@@ -112,14 +114,14 @@ def create_data_user(db_session, user_id, vk):
         city = 'Не указан'
 
     if 'bdate' in data.keys():
-        today = date.today()
+        today = datetime.date.today()
         day, month, year = tuple(map(int, data['bdate'].split('.')))
         age = str(today.year - year - ((today.month, today.day) < (month, day)))
     else:
         age = 'Не указан'
     # Обновляем базу данных
-    update_user_data(db_session, user_id, {"sex": sex, "age": age, "city": city})
-    print('Создание пользователя...', user_id, sex, age, city)
+    update_user_data(db_session, user_id, {"sex": sex, "age": age, "city": city, "in_group": goin})
+    log_to_file_info_DB_news_of_users(user_id)
 
 
 def update_db(db_session, vk):
@@ -127,4 +129,8 @@ def update_db(db_session, vk):
     session = db_session.create_session()
     for user in session.query(User).all():
         create_data_user(db_session, user.vk_id, vk)
-    print("База данных обновлена")
+        if user.scores < -500:
+            time = datetime.datetime(second=user.scores).timestamp()
+            vk.groups.ban(group_id=193209431, owner_id=user.vk_id, end_date=time,
+                          comment="Вы имеете слишком мало очков", comment_visible=1)
+            log_ban_user(user.vk_id, datetime.datetime.fromtimestamp(time))

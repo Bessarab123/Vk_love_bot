@@ -1,4 +1,5 @@
 from data.user import *
+from update_data import get_user
 
 
 def search_for_familiar_people(db_session, user, age, city, sex):
@@ -27,3 +28,11 @@ def search_for_familiar_people(db_session, user, age, city, sex):
                 and friend.interlocutor is None:
             friends.append(friend.vk_id)
     return friends
+
+def get_interlocutor_list(db_session, user_id):
+    session = db_session.create_session()
+
+    user = get_user(db_session, user_id)
+    #for a in session.query(User).get(user.vk_id):
+    #    print(a)
+    return []
