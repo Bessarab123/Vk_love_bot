@@ -85,7 +85,7 @@ def send_text_or_file(text, user_id, vk):
             pprint(text)
             log_to_file_info_DB_send()
             vk.messages.send(user_id=user_id,
-                             message='Сорри мы пока не можем обрабатывать такие файлы',
+                             message='Сорри, мы пока не можем обрабатывать такие файлы',
                              random_id=random.randint(0, 2 ** 64))
     elif "text" in text:
         log_to_file_info_DB_send()
@@ -113,7 +113,7 @@ def main():
             user_info = vk.users.get(user_ids=user_id)[0]
             vk.messages.send(user_id=user_id,
                              message=f"Привет, {user_info['last_name']} {user_info['first_name']}!\n"
-                                     "Вы вступили в группу! Для того чтобы продолжить общение,"
+                                     "Вы вступили в группу! Для того, чтобы продолжить общение,"
                                      "Хотите узнать мои функции - напишите /help\n"
                                      "Только, есть одно маленькое требование - пишите цензурно, без мата.",
                              random_id=random.randint(0, 2 ** 64))
@@ -133,19 +133,19 @@ def main():
                 log_to_file_info_DB_send()
                 vk.messages.send(user_id=user_id,
                                  message="Я могу познакомить вас анонимно с пользователем.\n"
-                                         "/set_description - Заполнить анкету\n"
-                                         "/set_city - поменять город\n"
-                                         "/set_age - поменять возраст\n"
-                                         "/set_sex - поменять пол\n"
-                                         "/anonymous_user age:17,city:Тула,sex:1, - познакомиться с кем-нибудь\n"
-                                         "age, city, sex - необезательные переменные для уточнения поиска\n"
-                                         "при их отсутвии бот посторается найти наилучшего собеседника\n"
+                                         "/set_description - заполнить анкету\n"
+                                         "/set_city - указать или поменять город\n"
+                                         "/set_age - указать или поменять возраст\n"
+                                         "/set_sex - указать пол\n"
+                                         "/anonymous_user age:17,city:Тула,sex:1,познакомиться с кем-нибудь\n"
+                                         "age, city, sex - необязательные переменные для уточнения поиска\n"
+                                         "при их отсутвии бот постарается найти наилучшего собеседника\n"
                                          "Захотите прекратить общение - /stop в помощь.\n"
                                          "Хотите открыть свою страницу - /show_me.\n"
                                          "Также вы можете просто пообщаться со мной - /communication.\n"
-                                         "Если у вас есть предложения то пишите на почту bessarab.2003@yandex.ru\n"
+                                         "Если у вас есть предложения, то пишите на почту bessarab.2003@yandex.ru\n"
                                          "nastya.nedoseicko@yandex.ru\n"
-                                         "Чего желаете вы?",
+                                         "Чего желаете, вы?",
                                  random_id=random.randint(0, 2 ** 64))
             # Изменение каких то данных в бд
             elif last_text == '/set_description':
@@ -197,9 +197,9 @@ def main():
                     log_to_file_info_DB_send()
                     message = f'''Вот кого мы нашли:
                                   {get_user_info(db_session, id_interlocutor)}
-                                  Если желаете начать общение то напишите Y
-                                  Если хотите кого нибудь другого то N
-                                  Если вам начинают попадаться те же самые люди то расширте
+                                  Если желаете начать общение, то напишите Y
+                                  Если хотите кого нибудь другого, то N
+                                  Если вам начинают попадаться те же самые люди, то расширьте
                                   круг поиска'''
                     log_to_file_info_DB_send()
                     update_user_data(db_session, user_id, {
@@ -209,8 +209,8 @@ def main():
                                      random_id=random.randint(0, 2 ** 64))
                 else:
                     log_to_file_info_DB_send()
-                    vk.messages.send(user_id=user_id, message="Кажется мы никого не нашли "
-                                                              "попытайтесь позже или расширте "
+                    vk.messages.send(user_id=user_id, message="Кажется, мы никого не нашли "
+                                                              "попытайтесь позже или расширьте "
                                                               "круг поиска",
                                      random_id=random.randint(0, 2 ** 64))
 
@@ -218,7 +218,7 @@ def main():
                 log_to_file_messegas_of_users()
                 # Предлагаем пользователю согласиться связаться с пользователем
                 if text == 'Y':
-                    message = '''Вы подключились к собеседнику, все дальнейие сообщения будут 
+                    message = '''Вы подключились к собеседнику, все дальнейшие сообщения будут 
                     отправлены ему, чтобы пректратить общение пропишите /stop_search'''
                     log_to_file_info_DB_send()
                     vk.messages.send(user_id=user_id, message=message,
@@ -282,9 +282,9 @@ def main():
                 else:
                     log_to_file_info_DB_send()
                     vk.messages.send(user_id=user_id, message="Вы ввели не число или оно не "
-                                                              "соответсыует указаниям"
+                                                              "соответсвует указаниям"
                                                               "\nЕсли не хотите менять "
-                                                              "рэйтин то введите - 0",
+                                                              "рэйтинг, то введите - 0",
                                      random_id=random.randint(0, 2 ** 64))
                     continue
                 log_to_file_info_DB_send()
