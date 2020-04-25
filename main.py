@@ -1,11 +1,9 @@
 # - *- coding: utf- 8 - *-
 import json
 import random
-from pprint import pprint
-
+import schedule
 import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
-from datetime import datetime
 from data import db_session
 from log import *
 from search_familiar_people import search_for_familiar_people
@@ -68,6 +66,7 @@ def main():
     vk = vk_session.get_api()
     db_session.global_init("vk_love_bot.db")
     longpoll = VkBotLongPoll(vk_session, 193209431)
+    schedule.every().day.at("10:30").do(update_db, db_session=db_session, vk=vk)
     log_bot_wake_up()
     for event in longpoll.listen():
         if event.type == VkBotEventType.GROUP_JOIN:
@@ -158,19 +157,19 @@ def main():
             elif text == '/set_description':
                 update_user_data(db_session, user_id, {'last_text': text})
                 vk.messages.send(user_id=user_id, message='Введите описание:',
-                                  random_id=random.randint(0, 2 ** 64))
+                                 random_id=random.randint(0, 2 ** 64))
             elif text == '/set_city':
                 update_user_data(db_session, user_id, {'last_text': text})
                 vk.messages.send(user_id=user_id, message='Введите город:',
-                                  random_id=random.randint(0, 2 ** 64))
+                                 random_id=random.randint(0, 2 ** 64))
             elif text == '/set_age':
                 update_user_data(db_session, user_id, {'last_text': text})
                 vk.messages.send(user_id=user_id, message='Введите возраст:',
-                                  random_id=random.randint(0, 2 ** 64))
+                                 random_id=random.randint(0, 2 ** 64))
             elif text == '/set_sex':
                 update_user_data(db_session, user_id, {'last_text': text})
                 vk.messages.send(user_id=user_id, message='Введите пол М/Ж:',
-                                  random_id=random.randint(0, 2 ** 64))
+                                 random_id=random.randint(0, 2 ** 64))
             elif text == '/show_scores':
                 update_user_data(db_session, user_id, {'last_text': text})
                 vk.messages.send(user_id=user_id,
@@ -193,7 +192,7 @@ def main():
                     log_to_file_info_DB_send()
                     vk.messages.send(user_id=user_id,
                                      message="Не расстраивайтесь! Когда вы считаете, что все очень"
-                                             " плохо, то потом"
+                                             " плохо, то потом\n"
                                              "будет просто замечательно.",
                                      random_id=random.randint(0, 2 ** 64))
             elif '/anonymous_user' in text:
@@ -282,8 +281,8 @@ def main():
                 log_to_file_disclosure_of_indentity()
                 log_to_file_info_DB_send()
                 vk.messages.send(user_id=get_interlocutor(db_session, user_id),
-                                message=f'Собеседник захотел открыться вам. Вот его ID - {user_id}',
-                                random_id=random.randint(0, 2 ** 64))
+                                 message=f'Собеседник захотел открыться вам. Вот его ID - {user_id}',
+                                 random_id=random.randint(0, 2 ** 64))
 
             elif text == '/stop':
                 log_to_file_stop_of_user()
@@ -350,11 +349,6 @@ def main():
             # После всех возможных вариантов сообщений меняем last_text на text
             log_to_file_info_DB_send()
             update_user_data(db_session, user_id, {'last_text': text})
-        if datetime.datetime.now().strftime("%H:%M:%S") == "00:00:30" or TEST:
-            TEST = False
-            # Обновление базы данных
-            log_to_file_update_DB()
-            update_db(db_session, vk)
 
 
 def get_data_from_file():

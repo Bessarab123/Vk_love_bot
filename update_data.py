@@ -1,7 +1,8 @@
 import datetime
 import json
 import vk_api
-from log import log_to_file_info_DB_news_of_users, log_to_file_error_with_DB, log_ban_user
+from log import log_to_file_info_DB_news_of_users, log_to_file_error_with_DB, log_ban_user, \
+    log_to_file_update_DB
 
 from data.user import *
 
@@ -138,6 +139,7 @@ def update_db(db_session, vk):
     """Обновить базу данных всзязи с непостоянностью жизни у кого-то день рождения, а кого-то
     пора выгнать"""
     session = db_session.create_session()
+    log_to_file_update_DB()
     for user in session.query(User).all():
         create_data_user(db_session, user.vk_id, vk)
         update_user_data(db_session, user.vk_id, {"scores": int(-user.scores * 0.1)})
