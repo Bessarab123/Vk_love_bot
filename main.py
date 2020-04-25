@@ -229,11 +229,11 @@ def main():
                 # Поиск собеседников
                 log_to_file_info_DB_send()
                 people, rout = search_for_familiar_people(db_session,
-                                                    get_user(db_session, user_id),
-                                                    sex_interlocutor=sex,
-                                                    city_interlocutor=city,
-                                                    age_interlocutor=age,
-                                                    rout=rout)
+                                                          get_user(db_session, user_id),
+                                                          sex_interlocutor=sex,
+                                                          city_interlocutor=city,
+                                                          age_interlocutor=age,
+                                                          rout=rout)
                 print(people, 'вот кого мы нашли на', rout, 'проходе')
                 if people:
                     id_interlocutor = random.choice(people)
@@ -368,8 +368,8 @@ def get_data_from_file():
 
 
 if __name__ == '__main__':
-    #while True:
-    #    try:
+    while True:
+        try:
             main()
-    #    except Exception as e:
-    #        log_critical_error(e)
+        except Exception as e:
+            log_critical_error(e)

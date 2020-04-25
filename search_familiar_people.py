@@ -36,11 +36,12 @@ def get_from_db_interlocutors(session, user, age, age_dif=2, sex=None, city=None
     scores_dif = 200
     max_age = user.age + age_dif
     min_age = user.age - age_dif
-    return list(session.query(User).filter((User.scores >= user.scores - scores_dif) |
+    print(min_age)
+    return list(session.query(User).filter((User.scores >= user.scores - scores_dif),
                                            (User.scores <= user.scores + scores_dif),
                                            User.interlocutor == None, User.in_group == True,
                                            User.vk_id != user.vk_id,
                                            ((User.city == city) if city else User.city.like('%%')),
                                            ((User.sex == sex) if sex else User.sex.in_(['М', 'Ж'])),
-                                           (max_age > User.age) | (User.age > min_age)
+                                           (max_age >= User.age), (User.age >= min_age)
                                            ))
