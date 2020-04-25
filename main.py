@@ -60,7 +60,7 @@ def send_text_or_file(text, user_id, vk):
 
 
 def main():
-    TEST = False
+    TEST = False#
     bad_words = set(get_data_from_file())
     vk_session = get_vk_session()  # Создаём сессию
     vk = vk_session.get_api()
@@ -69,6 +69,7 @@ def main():
     schedule.every().day.at("10:30").do(update_db, db_session=db_session, vk=vk)
     log_bot_wake_up()
     for event in longpoll.listen():
+        schedule.run_pending()
         if event.type == VkBotEventType.GROUP_JOIN:
             # пишет в лог про новоприбывшего
             # позволяет группе отправлять сообщения новоприбывшему

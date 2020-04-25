@@ -126,8 +126,11 @@ def create_data_user(db_session, user_id, vk, goin=None):
 
     if 'bdate' in data.keys():
         today = datetime.date.today()
-        day, month, year = tuple(map(int, data['bdate'].split('.')))
-        age = str(today.year - year - ((today.month, today.day) < (month, day)))
+        if len(tuple(map(int, data['bdate'].split('.')))) != 3:
+            age = 'Не указан'
+        else:
+            day, month, year = tuple(map(int, data['bdate'].split('.')))
+            age = str(today.year - year - ((today.month, today.day) < (month, day)))
     else:
         age = 'Не указан'
     # Обновляем базу данных
