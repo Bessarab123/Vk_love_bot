@@ -36,7 +36,6 @@ def get_from_db_interlocutors(session, user, age, age_dif=2, sex=None, city=None
     scores_dif = 200
     max_age = user.age + age_dif
     min_age = user.age - age_dif
-    print(min_age)
     return list(session.query(User).filter((User.scores >= user.scores - scores_dif),
                                            (User.scores <= user.scores + scores_dif),
                                            User.interlocutor == None, User.in_group == True,

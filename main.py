@@ -22,7 +22,6 @@ def get_vk_session():
 
 
 def send_text_or_file(text, user_id, vk):
-    pprint(text)
     """Обработка сообщений и последующая их отправка указонаму юзеру
     media - словарь с информацие о пришедшем сообщении
     user_id - id пользователя vk от кого надо отправить сообщение"""
@@ -368,4 +367,5 @@ if __name__ == '__main__':
         try:
             main()
         except Exception as e:
+            print(e)
             log_critical_error(e)
