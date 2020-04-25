@@ -22,11 +22,12 @@ def get_vk_session():
 
 
 def send_text_or_file(text, user_id, vk):
+    pprint(text)
     """Обработка сообщений и последующая их отправка указонаму юзеру
     media - словарь с информацие о пришедшем сообщении
     user_id - id пользователя vk от кого надо отправить сообщение"""
     user = get_interlocutor(db_session, user_id)
-    if not text['attachments']:
+    if text['attachments']:
         if text['attachments'][0]['type'] == 'video':
             id_media = text['attachments'][0]['video']['id']
             owner_id = text['attachments'][0]['video']['owner_id']
@@ -37,15 +38,6 @@ def send_text_or_file(text, user_id, vk):
                              attachment=attachment,
                              random_id=random.randint(0, 2 ** 64))
 
-        elif text['attachments'][0]['type'] == 'photo':
-            id_media = text['attachments'][0]['photo']['id']
-            owner_id = text['attachments'][0]['photo']['owner_id']
-            attachment = f'photo{owner_id}_{id_media}'
-            if 'access_key' in text['attachments'][0]['photo'].keys():
-                attachment += f"_{text['attachments'][0]['photo']['access_key']}"
-            vk.messages.send(user_id=user,
-                             attachment=attachment,
-                             random_id=random.randint(0, 2 ** 64))
 
         elif text['attachments'][0]['type'] == 'audio':
             id_media = text['attachments'][0]['audio']['id']
@@ -225,7 +217,6 @@ def main():
                 except InputInfoUserError or IndexError:
                     vk.messages.send(user_id=user_id, message="Неверные параметры поиска",
                                      random_id=random.randint(0, 2 ** 64))
-                print(sex, age, city)
                 # Поиск собеседников
                 log_to_file_info_DB_send()
                 people, rout = search_for_familiar_people(db_session,
@@ -234,7 +225,6 @@ def main():
                                                           city_interlocutor=city,
                                                           age_interlocutor=age,
                                                           rout=rout)
-                print(people, 'вот кого мы нашли на', rout, 'проходе')
                 if people:
                     id_interlocutor = random.choice(people)
                     # Если был подобран собеседник
@@ -244,7 +234,7 @@ def main():
                                   Если желаете начать общение, то напишите Y
                                   Если хотите кого нибудь другого, то N
                                   Если вам начинают попадаться те же самые люди то лучше 
-                                  подождите'''
+                                  подождите. Если хотите остновить поиск - /stop_search'''
                     log_to_file_info_DB_send()
                     update_user_data(db_session, user_id, {
                         "interlocutor": id_interlocutor})
@@ -262,7 +252,7 @@ def main():
                 # Предлагаем пользователю согласиться связаться с пользователем
                 if text == 'Y':
                     message = '''Вы подключились к собеседнику, все дальнейшие сообщения будут 
-                    отправлены ему, чтобы пректратить общение пропишите /stop_search'''
+                    отправлены ему, чтобы пректратить общение пропишите /stop'''
                     log_to_file_info_DB_send()
                     vk.messages.send(user_id=user_id, message=message,
                                      random_id=random.randint(0, 2 ** 64))
@@ -272,7 +262,7 @@ def main():
                     log_to_file_info_DB_send()
                     message = f'''К вам подключился пользователь! {get_user_info(db_session,
                                                                                  user_id)}\n
-                              Вы всегда можете написать /stop_search и не общаться с ним'''
+                              Вы всегда можете написать /stop и не общаться с ним'''
                     log_to_file_info_DB_send()
                     vk.messages.send(user_id=get_interlocutor(db_session, user_id),
                                      message=message,

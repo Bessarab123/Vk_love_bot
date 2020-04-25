@@ -4,7 +4,6 @@ logging.basicConfig(filename='log_file.log',
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
 
-# мне кажется что нет смысла в комментах, так как в логе прописываются все действия проги
 def log_to_file_info_DB_send():
     logging.info('Отправлен запрос в базу данных')
 
