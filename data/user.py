@@ -4,7 +4,7 @@ from flask_login import UserMixin
 from sqlalchemy_serializer import SerializerMixin
 
 
-class User(SqlAlchemyBase):
+class User(SqlAlchemyBase, SerializerMixin, UserMixin):
     __tablename__ = 'users'
     vk_id = sqlalchemy.Column(sqlalchemy.Integer, nullable=False, primary_key=True)
     age = sqlalchemy.Column(sqlalchemy.Integer, nullable=True, default=16)

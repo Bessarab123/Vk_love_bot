@@ -1,6 +1,6 @@
 import logging
 
-logging.basicConfig(filename='logggg.log',
+logging.basicConfig(filename='log_file.log',
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
 
@@ -33,12 +33,17 @@ def log_ban_user(id, time):
     logging.info(f"Пользователь был забанен {id} {time}")
 
 
+def log_bot_wake_up():
+    logging.info('Бот проснулся')
+
+
 def log_to_file_error_with_DB():
     logging.warning('Какая-то беда с базой данных')
 
 
 def log_to_message(text):
     logging.warning('Неизвесное сообщение: ' + str(text))
+
 
 def log_critical_error(error):
     logging.critical(error)
