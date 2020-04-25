@@ -157,18 +157,23 @@ def main():
                     vk.messages.send(user_id=user_id, message="Неверно указан пол",
                                      random_id=random.randint(0, 2 ** 64))
             elif text == '/set_description':
-                vk.messsages.send(user_id=user_id, message='Введите описание:',
+                update_user_data(db_session, user_id, {'last_text': text})
+                vk.messages.send(user_id=user_id, message='Введите описание:',
                                   random_id=random.randint(0, 2 ** 64))
             elif text == '/set_city':
-                vk.messsages.send(user_id=user_id, message='Введите город:',
+                update_user_data(db_session, user_id, {'last_text': text})
+                vk.messages.send(user_id=user_id, message='Введите город:',
                                   random_id=random.randint(0, 2 ** 64))
             elif text == '/set_age':
-                vk.messsages.send(user_id=user_id, message='Введите возраст:',
+                update_user_data(db_session, user_id, {'last_text': text})
+                vk.messages.send(user_id=user_id, message='Введите возраст:',
                                   random_id=random.randint(0, 2 ** 64))
             elif text == '/set_sex':
-                vk.messsages.send(user_id=user_id, message='Введите пол М/Ж:',
+                update_user_data(db_session, user_id, {'last_text': text})
+                vk.messages.send(user_id=user_id, message='Введите пол М/Ж:',
                                   random_id=random.randint(0, 2 ** 64))
             elif text == '/show_scores':
+                update_user_data(db_session, user_id, {'last_text': text})
                 vk.messages.send(user_id=user_id,
                                  message=f"Ваши очки: {get_score(db_session, user_id)}",
                                  random_id=random.randint(0, 2 ** 64))
@@ -277,7 +282,7 @@ def main():
             elif last_text == '/show_me':
                 log_to_file_disclosure_of_indentity()
                 log_to_file_info_DB_send()
-                vk.message.send(user_id=get_interlocutor(db_session, user_id),
+                vk.messages.send(user_id=get_interlocutor(db_session, user_id),
                                 message=f'Собеседник захотел открыться вам. Вот его ID - {user_id}',
                                 random_id=random.randint(0, 2 ** 64))
 
